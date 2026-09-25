@@ -1,0 +1,36 @@
+name: Build paper PDF archive
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'papers/pdf/**'
+      - '.github/workflows/build-paper-archive.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build ZIP archive
+        run: |
+          cd papers
+          rm -f Cho_Hoon_Publications_PDF.zip
+          zip -j Cho_Hoon_Publications_PDF.zip pdf/*.pdf
+
+      - name: Commit archive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add papers/Cho_Hoon_Publications_PDF.zip
+          if git diff --cached --quiet; then
+            echo "No archive changes."
+            exit 0
+          fi
+          git commit -m "Build combined publications PDF archive"
+          git push
