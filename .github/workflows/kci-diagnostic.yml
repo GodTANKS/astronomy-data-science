@@ -13,41 +13,21 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Install parser
-        run: pip install beautifulsoup4 requests
-      - name: Inspect KCI article HTML for PDF/download endpoints
+      - name: Inspect exact download function
         shell: python
         run: |
-          import re, requests
-          from bs4 import BeautifulSoup
+          import re, requests, time
 
-          articles = {
-            "saturn": "ART003042346",
-            "solar": "ART003262565",
-            "coding": "ART002920862",
-            "moon": "ART002432603",
-            "space": "ART002818534",
-            "orion": "ART002428404",
-          }
-
-          headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
-          }
-
-          for key, aid in articles.items():
-            url = "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=" + aid
-            print("\n===== ", key, aid, " =====")
-            r = requests.get(url, headers=headers, timeout=30)
-            print("status", r.status_code, "len", len(r.text), "final", r.url)
-            soup = BeautifulSoup(r.text, "html.parser")
-            for tag in soup.find_all(True):
-              text = " ".join(tag.stripped_strings)
-              attrs = " ".join(f"{k}={v}" for k,v in tag.attrs.items())
-              blob = (text + " " + attrs).lower()
-              if any(x in blob for x in ["원문", "pdf", "download", "filedown", "fulltext"]):
-                print("TAG:", str(tag)[:2000].replace("\n"," "))
-            # Also print JS lines that may contain endpoint names.
-            for line in r.text.splitlines():
-              low=line.lower()
-              if any(x in low for x in ["download", "pdf", "원문", "filedown", "fulltext"]):
-                print("LINE:", line.strip()[:2500])
+          aid="ART002920862"
+          url="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId="+aid
+          headers={"User-Agent":"Mozilla/5.0 Chrome/130 Safari/537.36"}
+          r=requests.get(url,headers=headers,timeout=90)
+          print("status",r.status_code,"len",len(r.text))
+          text=r.text
+          needles=["function fncDown","fncDown(","KCI_FI","fileDown","download"]
+          for needle in needles:
+            print("\n---",needle,"---")
+            starts=[m.start() for m in re.finditer(re.escape(needle),text,re.I)]
+            print("count",len(starts))
+            for pos in starts[:20]:
+              print(text[max(0,pos-800):pos+1800].replace("\n"," ")[:2600])
