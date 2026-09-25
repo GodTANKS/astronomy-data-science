@@ -95,9 +95,33 @@ if qa_submit:
             "------------------------------",
             qa_message.strip(),
         ])
-        gmail = "https://mail.google.com/mail/?view=cm&fs=1&to=whgns8364%40gmail.com&su=" + quote(subject) + "&body=" + quote(body)
-        st.success("질문 내용이 준비되었습니다. 아래 버튼을 누르면 Gmail 작성창이 열립니다.")
-        st.link_button("✉️ Gmail로 질문 보내기", gmail)
+        to = "whgns8364@gmail.com"
+        gmail = "https://mail.google.com/mail/?view=cm&fs=1&to=" + quote(to) + "&su=" + quote(subject) + "&body=" + quote(body)
+        outlook = "https://outlook.live.com/mail/0/deeplink/compose?to=" + quote(to) + "&subject=" + quote(subject) + "&body=" + quote(body)
+
+        st.success("질문 내용이 준비되었습니다. 평소 사용하는 메일 서비스를 선택해 보내 주세요.")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.link_button("Gmail", gmail, use_container_width=True)
+        with col2:
+            st.link_button("Outlook", outlook, use_container_width=True)
+        with col3:
+            st.link_button("네이버 메일", "https://mail.naver.com/v2/new", use_container_width=True)
+
+        col4, col5 = st.columns(2)
+        with col4:
+            st.link_button("카카오메일", "https://mail.kakao.com/", use_container_width=True)
+        with col5:
+            st.link_button("다음메일", "https://mail.daum.net/", use_container_width=True)
+
+        st.caption("Gmail·Outlook은 받는 사람/제목/본문이 자동 입력됩니다. 네이버·카카오·다음은 아래 복사용 내용을 복사해 작성창에 붙여넣어 주세요.")
+        copy_text = "\n".join([
+            f"받는 사람: {to}",
+            f"제목: {subject}",
+            "",
+            body
+        ])
+        st.code(copy_text, language=None)
 
 st.markdown(
     '홈페이지의 <a href="https://GodTANKS.github.io/astronomy-data-science/#contact" target="_blank">문의·Q&A 페이지</a>에서도 질문을 작성할 수 있습니다.',
