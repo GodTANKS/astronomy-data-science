@@ -1,0 +1,82 @@
+name: Publish KCI papers
+
+on:
+  push:
+    paths:
+      - ".github/workflows/publish-kci-papers.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official KCI PDFs
+        shell: python
+        run: |
+          import re, requests
+          from pathlib import Path
+
+          papers = {
+            "ART002432603": "papers/pdf/2018-moon-astronomy-education-review.pdf",
+            "ART002428404": "papers/pdf/2018-orion-northern-filament-12co.pdf",
+            "ART002920862": "papers/pdf/2022-highschool-astronomy-coding.pdf",
+            "ART002818534": "papers/pdf/2022-space-hazard-text-mining.pdf",
+            "ART003042346": "papers/pdf/2023-saturn-spectroscopy-education.pdf",
+            "ART003262565": "papers/pdf/2025-solar-system-dynamical-classification.pdf",
+          }
+
+          headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
+          }
+          s = requests.Session()
+
+          for aid, target in papers.items():
+            article = (
+              "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/"
+              "ciSereArtiView.kci?sereArticleSearchBean.artiId=" + aid
+            )
+            print("ARTICLE", aid, target)
+            r = s.get(article, headers=headers, timeout=180)
+            r.raise_for_status()
+            ids = re.findall(r"fncDown\('([^']+)'\)", r.text)
+            if not ids:
+              raise RuntimeError(f"No KCI PDF file id found for {aid}")
+
+            endpoint = (
+              "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/"
+              "ciSereArtiOrteServHistIFrame.kci?sereArticleSearchBean.artiId="
+              + aid + "&sereArticleSearchBean.orteFileId=" + ids[0]
+            )
+            d = s.get(
+              endpoint,
+              headers={**headers, "Referer": article},
+              timeout=180,
+              allow_redirects=True,
+            )
+            d.raise_for_status()
+            if not d.content.startswith(b"%PDF"):
+              raise RuntimeError(
+                f"Downloaded content is not PDF for {aid}: "
+                f"{d.headers.get('content-type')} {d.url}"
+              )
+
+            p = Path(target)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(d.content)
+            print("SAVED", target, len(d.content), d.url)
+
+      - name: Commit PDFs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add papers/pdf/*.pdf
+          if git diff --cached --quiet; then
+            echo "No PDF changes to commit."
+          else
+            git commit -m "Add centralized official paper PDFs"
+            git push
+          fi
