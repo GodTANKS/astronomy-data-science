@@ -1,0 +1,13 @@
+streamlit
+numpy
+pandas
+requests
+skyfield
+plotly
+scikit-learn
+xgboost
+statsmodels
+sgp4
+scipy
+Pillow
+cryptography
