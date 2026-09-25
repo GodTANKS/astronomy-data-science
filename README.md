@@ -45,11 +45,13 @@ Streamlit 웹 간편판으로 은하 이미지 수집·전처리·증강·CNN �
 ### 외부고리 은하 영상 분석
 Google Colab 간편판에서 은하 번호를 선택하면 필요한 SDSS FITS를 자동으로 받고, i-band 영상에서 장축·단축 방향을 직접 마우스로 클릭하여 영상 처리·등광도선 분석을 수행합니다.
 
-## Research
+## Publications
 
-연구논문과 실습의 연결은 홈페이지의 Research 페이지에서 확인할 수 있습니다.
+논문 PDF는 각 코드 저장소에 중복 보관하지 않고 **통합 논문 모음** 한 곳에서 관리합니다.
 
-https://GodTANKS.github.io/astronomy-data-science/research.html
+https://GodTANKS.github.io/astronomy-data-science/papers/
+
+실습 홈페이지의 모든 `논문 보기` 버튼은 이 논문 모음의 해당 논문으로 연결합니다.
 
 ## Legacy archive
 
