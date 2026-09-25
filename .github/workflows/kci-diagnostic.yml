@@ -1,0 +1,51 @@
+name: KCI PDF diagnostic
+
+on:
+  push:
+    paths:
+      - ".github/workflows/kci-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect KCI article HTML for PDF/download endpoints
+        shell: python
+        run: |
+          import re, requests
+          from bs4 import BeautifulSoup
+
+          articles = {
+            "saturn": "ART003042346",
+            "solar": "ART003262565",
+            "coding": "ART002920862",
+            "moon": "ART002432603",
+            "space": "ART002818534",
+            "orion": "ART002428404",
+          }
+
+          headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
+          }
+
+          for key, aid in articles.items():
+            url = "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=" + aid
+            print("\n===== ", key, aid, " =====")
+            r = requests.get(url, headers=headers, timeout=30)
+            print("status", r.status_code, "len", len(r.text), "final", r.url)
+            soup = BeautifulSoup(r.text, "html.parser")
+            for tag in soup.find_all(True):
+              text = " ".join(tag.stripped_strings)
+              attrs = " ".join(f"{k}={v}" for k,v in tag.attrs.items())
+              blob = (text + " " + attrs).lower()
+              if any(x in blob for x in ["원문", "pdf", "download", "filedown", "fulltext"]):
+                print("TAG:", str(tag)[:2000].replace("\n"," "))
+            # Also print JS lines that may contain endpoint names.
+            for line in r.text.splitlines():
+              low=line.lower()
+              if any(x in low for x in ["download", "pdf", "원문", "filedown", "fulltext"]):
+                print("LINE:", line.strip()[:2500])
