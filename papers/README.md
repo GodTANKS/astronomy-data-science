@@ -3,10 +3,12 @@
 이 폴더는 **논문 PDF 중앙 자료실**입니다.  
 코드·실습 저장소에는 논문 PDF를 중복 저장하지 않고, 모든 논문은 이곳에서 관리합니다.
 
+현재 GitHub에 직접 업로드된 PDF는 **학술논문·제출원고 8편 + 석사학위논문 1편 = 9편**입니다. 박사학위논문은 현재 보유 원본이 HWP이므로 외부 학위논문 정보 링크로 연결합니다.
+
 홈페이지:
 - https://GodTANKS.github.io/astronomy-data-science/papers/
 
-## 현재 정리된 논문 8편
+## 학술논문·제출원고 8편
 
 1. 조훈·손정주 (2026), 「딥러닝 기반 은하 분류 교육 콘텐츠 개발」 — 제출 최종본
 2. 조훈·손정주 (2025), 「태양계 천체의 역학적 분류를 위한 데이터 사이언스 기반 천문 교육 콘텐츠 개발」, 현장과학교육 19(5), 412–437
@@ -29,3 +31,18 @@
 - `2023-saturn-spectroscopy-education.pdf`
 - `2025-solar-system-dynamical-classification.pdf`
 - `2026-galaxy-classification-deep-learning.pdf`
+
+
+## 학위논문
+
+9. 조훈 (2018), 「오리온-모노세로스 분자운 복합체내 북쪽 필라멘트에 대한 12CO선 전파 관측 연구」, 한국교원대학교 대학원 석사학위논문
+   - PDF: `pdf/2018-masters-orion-molecular-cloud-northern-filament.pdf`
+
+10. 조훈 (2024), 「천체 분류를 주제로 한 데이터 사이언스의 교육적 활용」, 한국교원대학교 대학원 박사학위논문
+   - 현재 보유 원본: HWP
+   - DBpia: https://www.dbpia.co.kr/journal/detail?nodeId=T16942094
+   - 디지털집현전: https://k-knowledge.kr/srch/read.jsp?id=259796446
+
+## 통합 ZIP
+
+GitHub Actions가 `papers/pdf/`의 PDF를 묶어 `papers/Cho_Hoon_Publications_PDF.zip`을 자동 생성하도록 구성되어 있습니다.
