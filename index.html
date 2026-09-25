@@ -147,7 +147,7 @@ section{padding:54px 0}.sectionhead{display:flex;justify-content:space-between;g
 </div>
 <form class="qa-form" id="qaForm">
 <h3>💬 질문 남기기</h3>
-<p>아래에 직접 작성한 뒤 보내기를 누르면 작성 내용이 이메일 문의로 연결됩니다.</p>
+<p>아래에 직접 작성한 뒤 보내기를 누르면 Gmail 작성창이 열리고 질문 내용이 자동으로 입력됩니다.</p>
 <label for="qaName">이름 / 소속</label>
 <input id="qaName" name="name" type="text" placeholder="예: 홍길동 / ○○고등학교">
 <label for="qaEmail">회신 받을 이메일 *</label>
@@ -166,8 +166,8 @@ section{padding:54px 0}.sectionhead{display:flex;justify-content:space-between;g
 </select>
 <label for="qaMessage">질문 내용 *</label>
 <textarea id="qaMessage" name="message" required placeholder="궁금한 점이나 실행 중 발생한 문제를 적어 주세요."></textarea>
-<div class="actions"><button class="btn primary" type="submit">질문 보내기 ✉</button><a class="btn soft" href="mailto:whgns8364@gmail.com">이메일 직접 작성</a></div>
-<div class="qa-note">※ GitHub Pages는 자체적으로 문의 내용을 저장하는 서버가 없기 때문에, ‘질문 보내기’를 누르면 기본 이메일 앱에서 작성 내용이 자동으로 채워집니다.</div>
+<div class="actions"><button class="btn primary" type="submit">Gmail로 질문 보내기 ✉</button><button class="btn soft" type="button" id="qaCopy">질문 내용 복사</button><a class="btn soft" href="https://mail.google.com/mail/?view=cm&fs=1&to=whgns8364%40gmail.com" target="_blank" rel="noopener">Gmail 직접 작성</a></div>
+<div class="qa-note">※ GitHub Pages는 자체 메일 전송 서버가 없기 때문에 Gmail 작성창을 여는 방식입니다. Gmail을 사용하지 않는 경우 ‘질문 내용 복사’를 눌러 다른 메일 앱에서 보내 주세요.</div>
 </form>
 </div>
 </div></section>
@@ -185,27 +185,55 @@ section{padding:54px 0}.sectionhead{display:flex;justify-content:space-between;g
 <footer class="footer"><div class="wrap footerin"><div><b>AI · 데이터 사이언스로 탐구하는 천문학</b><br>Astronomy × AI × Data Science Education</div><div>기존 공식 연구 아카이브: <a href="https://sites.google.com/view/astronomydatascience/%ED%99%88" target="_blank" rel="noopener">Google Sites ↗</a><br>GitHub: <a href="https://github.com/GodTANKS" target="_blank" rel="noopener">GodTANKS ↗</a><br>문의: <a href="mailto:whgns8364@gmail.com">whgns8364@gmail.com</a></div></div></footer>
 <script>
 const qaForm=document.getElementById('qaForm');
+const qaCopy=document.getElementById('qaCopy');
+
+function buildQaMessage(){
+  const name=document.getElementById('qaName').value.trim();
+  const email=document.getElementById('qaEmail').value.trim();
+  const topic=document.getElementById('qaTopic').value;
+  const message=document.getElementById('qaMessage').value.trim();
+  const subject='[Astronomy Q&A] '+topic;
+  const body=[
+    '문의 주제: '+topic,
+    '이름 / 소속: '+(name || '미기재'),
+    '회신 이메일: '+email,
+    '',
+    '질문 내용',
+    '------------------------------',
+    message,
+    '',
+    '문의 페이지: '+window.location.href
+  ].join('\n');
+  return {email, message, subject, body};
+}
+
 if(qaForm){
   qaForm.addEventListener('submit',function(e){
     e.preventDefault();
-    const name=document.getElementById('qaName').value.trim();
-    const email=document.getElementById('qaEmail').value.trim();
-    const topic=document.getElementById('qaTopic').value;
-    const message=document.getElementById('qaMessage').value.trim();
-    if(!email || !message){alert('회신 받을 이메일과 질문 내용을 입력해 주세요.');return;}
-    const subject='[Astronomy Q&A] '+topic;
-    const body=[
-      '문의 주제: '+topic,
-      '이름 / 소속: '+(name || '미기재'),
-      '회신 이메일: '+email,
-      '',
-      '질문 내용',
-      '------------------------------',
-      message,
-      '',
-      '문의 페이지: '+window.location.href
-    ].join('\n');
-    window.location.href='mailto:whgns8364@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    const q=buildQaMessage();
+    if(!q.email || !q.message){
+      alert('회신 받을 이메일과 질문 내용을 입력해 주세요.');
+      return;
+    }
+    const gmail='https://mail.google.com/mail/?view=cm&fs=1&to=whgns8364%40gmail.com&su='
+      +encodeURIComponent(q.subject)+'&body='+encodeURIComponent(q.body);
+    window.open(gmail,'_blank','noopener');
+  });
+}
+
+if(qaCopy){
+  qaCopy.addEventListener('click',async function(){
+    const q=buildQaMessage();
+    if(!q.message){
+      alert('먼저 질문 내용을 입력해 주세요.');
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText('제목: '+q.subject+'\n\n'+q.body);
+      alert('질문 내용이 복사되었습니다.');
+    }catch(err){
+      alert('자동 복사가 되지 않았습니다. 질문 내용을 직접 선택해 복사해 주세요.');
+    }
   });
 }
 </script>
