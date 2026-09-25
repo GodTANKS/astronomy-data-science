@@ -7,6 +7,7 @@ import sys
 import tempfile
 import zipfile
 from io import BytesIO
+from urllib.parse import quote
 from pathlib import Path
 
 import streamlit as st
@@ -63,3 +64,42 @@ if str(runtime) not in sys.path:
     sys.path.insert(0, str(runtime))
 os.chdir(runtime)
 runpy.run_path(str(runtime / "main.py"), run_name="__main__")
+
+# Public beta contact / Q&A
+st.divider()
+st.subheader("✉️ 문의 / Q&A")
+st.caption("실습 오류, 연구 내용, 교육 활용과 관련한 질문을 남겨 주세요. 문의 메일: whgns8364@gmail.com")
+
+with st.form("space_beta_qa"):
+    qa_name = st.text_input("이름 / 소속", placeholder="예: 홍길동 / ○○고등학교")
+    qa_email = st.text_input("회신 받을 이메일", placeholder="example@email.com")
+    qa_message = st.text_area(
+        "질문 내용",
+        placeholder="궁금한 점이나 실행 중 발생한 문제를 적어 주세요.",
+        height=140
+    )
+    qa_submit = st.form_submit_button("질문 작성 완료")
+
+if qa_submit:
+    if not qa_email.strip() or not qa_message.strip():
+        st.warning("회신 받을 이메일과 질문 내용을 입력해 주세요.")
+    else:
+        subject = "[SGP4+AI Beta Q&A] 우주감시 웹 실습 문의"
+        body = "\n".join([
+            "SGP4 + AI 우주감시 Beta 문의",
+            "",
+            f"이름 / 소속: {qa_name.strip() or '미기재'}",
+            f"회신 이메일: {qa_email.strip()}",
+            "",
+            "질문 내용",
+            "------------------------------",
+            qa_message.strip(),
+        ])
+        mailto = "mailto:whgns8364@gmail.com?subject=" + quote(subject) + "&body=" + quote(body)
+        st.success("질문 내용이 준비되었습니다. 아래 버튼을 눌러 이메일로 보내 주세요.")
+        st.link_button("✉️ 작성한 질문 이메일로 보내기", mailto)
+
+st.markdown(
+    '홈페이지의 <a href="https://GodTANKS.github.io/astronomy-data-science/#contact" target="_blank">문의·Q&A 페이지</a>에서도 질문을 작성할 수 있습니다.',
+    unsafe_allow_html=True,
+)
