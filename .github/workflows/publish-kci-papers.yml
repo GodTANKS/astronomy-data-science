@@ -14,66 +14,124 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download official KCI PDFs
+
+      - name: Download official paper PDFs
         shell: python
         run: |
-          import re, requests
+          import html
+          import re
+          import requests
           from pathlib import Path
+          from urllib.parse import quote_plus, urljoin
 
-          papers = {
-            "ART002432603": "papers/pdf/2018-moon-astronomy-education-review.pdf",
-            "ART002428404": "papers/pdf/2018-orion-northern-filament-12co.pdf",
-            "ART002920862": "papers/pdf/2022-highschool-astronomy-coding.pdf",
-            "ART002818534": "papers/pdf/2022-space-hazard-text-mining.pdf",
-            "ART003042346": "papers/pdf/2023-saturn-spectroscopy-education.pdf",
-            "ART003262565": "papers/pdf/2025-solar-system-dynamical-classification.pdf",
-          }
+          papers = [
+            ("ART002432603", "달을 주제로한 천문교육 연구동향 분석",
+             "papers/pdf/2018-moon-astronomy-education-review.pdf"),
+            ("ART002428404", "12CO 분자선 관측 자료를 이용한 오리온 분자운 복합체내 북쪽 필라멘트의 운동학 연구",
+             "papers/pdf/2018-orion-northern-filament-12co.pdf"),
+            ("ART002920862", "고등학교 천문학 수업에서 코딩을 활용한 데이터 기반 탐구활동의 활성화 방안 탐색",
+             "papers/pdf/2022-highschool-astronomy-coding.pdf"),
+            ("ART002818534", "‘우주 위험’ 관련 뉴스 기사의 텍스트 마이닝 분석 연구",
+             "papers/pdf/2022-space-hazard-text-mining.pdf"),
+            (None, "외부고리 은하 영상 분석을 위한 파이썬 기반 알고리즘 개발",
+             "papers/pdf/2022-outer-ring-galaxy.pdf"),
+            ("ART003042346", "비형식 교육기관의 천문대를 활용한 토성 분광 관측 및 분석 교육 프로그램의 개발과 수행",
+             "papers/pdf/2023-saturn-spectroscopy-education.pdf"),
+            ("ART003262565", "태양계 천체의 역학적 분류를 위한 데이터 사이언스 기반 천문 교육 콘텐츠 개발",
+             "papers/pdf/2025-solar-system-dynamical-classification.pdf"),
+          ]
 
           headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
           }
           s = requests.Session()
 
-          for aid, target in papers.items():
+          def save_pdf(content, target, source):
+            if not content.startswith(b"%PDF"):
+              return False
+            p = Path(target)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(content)
+            print("SAVED", target, len(content), source)
+            return True
+
+          def try_kci(aid, target):
+            if not aid:
+              return False
             article = (
               "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/"
               "ciSereArtiView.kci?sereArticleSearchBean.artiId=" + aid
             )
-            print("ARTICLE", aid, target)
-            r = s.get(article, headers=headers, timeout=180)
-            r.raise_for_status()
-            ids = re.findall(r"fncDown\('([^']+)'\)", r.text)
-            if not ids:
-              raise RuntimeError(f"No KCI PDF file id found for {aid}")
-
-            endpoint = (
-              "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/"
-              "ciSereArtiOrteServHistIFrame.kci?sereArticleSearchBean.artiId="
-              + aid + "&sereArticleSearchBean.orteFileId=" + ids[0]
-            )
-            d = s.get(
-              endpoint,
-              headers={**headers, "Referer": article},
-              timeout=180,
-              allow_redirects=True,
-            )
-            d.raise_for_status()
-            if not d.content.startswith(b"%PDF"):
-              raise RuntimeError(
-                f"Downloaded content is not PDF for {aid}: "
-                f"{d.headers.get('content-type')} {d.url}"
+            try:
+              r = s.get(article, headers=headers, timeout=180)
+              r.raise_for_status()
+              ids = re.findall(r"fncDown\('([^']+)'\)", r.text)
+              if not ids:
+                print("KCI download id unavailable", aid)
+                return False
+              endpoint = (
+                "https://www.kci.go.kr/kciportal/ci/sereArticleSearch/"
+                "ciSereArtiOrteServHistIFrame.kci?sereArticleSearchBean.artiId="
+                + aid + "&sereArticleSearchBean.orteFileId=" + ids[0]
               )
+              d = s.get(endpoint, headers={**headers, "Referer": article},
+                        timeout=180, allow_redirects=True)
+              d.raise_for_status()
+              return save_pdf(d.content, target, d.url)
+            except Exception as e:
+              print("KCI FAILED", aid, repr(e))
+              return False
 
-            p = Path(target)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_bytes(d.content)
-            print("SAVED", target, len(d.content), d.url)
+          def try_dspace(title, target):
+            try:
+              search = "https://dspace.kci.go.kr/simple-search?query=" + quote_plus(title)
+              r = s.get(search, headers=headers, timeout=180)
+              r.raise_for_status()
+              handles = []
+              for h in re.findall(r'href=["\']([^"\']*/handle/kci/\d+)["\']', r.text, re.I):
+                h = html.unescape(h)
+                h = urljoin("https://dspace.kci.go.kr", h)
+                if h not in handles:
+                  handles.append(h)
+              print("DSPACE handles", title, handles[:10])
 
-      - name: Commit PDFs
+              for handle in handles[:10]:
+                h = s.get(handle, headers=headers, timeout=180)
+                h.raise_for_status()
+                if title.replace("‘","'").replace("’","'")[:15] not in h.text.replace("‘","'").replace("’","'"):
+                  continue
+                links = re.findall(r'href=["\']([^"\']*bitstream/handle/kci/[^"\']+)["\']', h.text, re.I)
+                for link in links:
+                  link = html.unescape(link)
+                  pdfurl = urljoin("https://dspace.kci.go.kr", link)
+                  d = s.get(pdfurl, headers={**headers, "Referer": handle},
+                            timeout=180, allow_redirects=True)
+                  if d.ok and save_pdf(d.content, target, pdfurl):
+                    return True
+              return False
+            except Exception as e:
+              print("DSPACE FAILED", title, repr(e))
+              return False
+
+          failures=[]
+          for aid, title, target in papers:
+            print("\nARTICLE", aid, title, "->", target)
+            ok = try_kci(aid, target)
+            if not ok:
+              ok = try_dspace(title, target)
+            if not ok:
+              failures.append((aid,title,target))
+              print("UNRESOLVED", title)
+
+          print("\nUNRESOLVED COUNT", len(failures))
+          for x in failures:
+            print("UNRESOLVED ITEM", x)
+
+      - name: Commit downloaded PDFs
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add papers/pdf/*.pdf
+          git add papers/pdf/*.pdf 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No PDF changes to commit."
           else
