@@ -13,21 +13,29 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect exact download function
+      - name: Test KCI PDF download endpoint
         shell: python
         run: |
-          import re, requests, time
+          import re, requests
 
           aid="ART002920862"
-          url="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId="+aid
-          headers={"User-Agent":"Mozilla/5.0 Chrome/130 Safari/537.36"}
-          r=requests.get(url,headers=headers,timeout=90)
-          print("status",r.status_code,"len",len(r.text))
-          text=r.text
-          needles=["function fncDown","fncDown(","KCI_FI","fileDown","download"]
-          for needle in needles:
-            print("\n---",needle,"---")
-            starts=[m.start() for m in re.finditer(re.escape(needle),text,re.I)]
-            print("count",len(starts))
-            for pos in starts[:20]:
-              print(text[max(0,pos-800):pos+1800].replace("\n"," ")[:2600])
+          article="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId="+aid
+          headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"}
+          s=requests.Session()
+          r=s.get(article,headers=headers,timeout=120)
+          print("article",r.status_code,len(r.content),r.url)
+          ids=re.findall(r"fncDown\('([^']+)'\)",r.text)
+          print("download ids",ids)
+          if not ids:
+            raise SystemExit("no KCI file id")
+          fid=ids[0]
+          url="https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiOrteServHistIFrame.kci?sereArticleSearchBean.artiId="+aid+"&sereArticleSearchBean.orteFileId="+fid
+          d=s.get(url,headers={**headers,"Referer":article},timeout=120,allow_redirects=True)
+          print("download status",d.status_code)
+          print("final url",d.url)
+          print("content-type",d.headers.get("content-type"))
+          print("content-disposition",d.headers.get("content-disposition"))
+          print("length",len(d.content))
+          print("first100",repr(d.content[:100]))
+          if not d.content.startswith(b"%PDF"):
+            print("text-preview",d.text[:5000])
