@@ -147,7 +147,7 @@ section{padding:54px 0}.sectionhead{display:flex;justify-content:space-between;g
 </div>
 <form class="qa-form" id="qaForm">
 <h3>💬 질문 남기기</h3>
-<p>아래에 직접 작성한 뒤 보내기를 누르면 Gmail 작성창이 열리고 질문 내용이 자동으로 입력됩니다.</p>
+<p>아래에 질문을 작성한 뒤 평소 사용하는 메일 서비스를 선택해 보내면 됩니다.</p>
 <label for="qaName">이름 / 소속</label>
 <input id="qaName" name="name" type="text" placeholder="예: 홍길동 / ○○고등학교">
 <label for="qaEmail">회신 받을 이메일 *</label>
@@ -166,8 +166,16 @@ section{padding:54px 0}.sectionhead{display:flex;justify-content:space-between;g
 </select>
 <label for="qaMessage">질문 내용 *</label>
 <textarea id="qaMessage" name="message" required placeholder="궁금한 점이나 실행 중 발생한 문제를 적어 주세요."></textarea>
-<div class="actions"><button class="btn primary" type="submit">Gmail로 질문 보내기 ✉</button><button class="btn soft" type="button" id="qaCopy">질문 내용 복사</button><a class="btn soft" href="https://mail.google.com/mail/?view=cm&fs=1&to=whgns8364%40gmail.com" target="_blank" rel="noopener">Gmail 직접 작성</a></div>
-<div class="qa-note">※ GitHub Pages는 자체 메일 전송 서버가 없기 때문에 Gmail 작성창을 여는 방식입니다. Gmail을 사용하지 않는 경우 ‘질문 내용 복사’를 눌러 다른 메일 앱에서 보내 주세요.</div>
+<div class="actions">
+<button class="btn primary qa-provider" type="button" data-provider="gmail">Gmail</button>
+<button class="btn soft qa-provider" type="button" data-provider="naver">네이버 메일</button>
+<button class="btn soft qa-provider" type="button" data-provider="kakao">카카오메일</button>
+<button class="btn soft qa-provider" type="button" data-provider="daum">다음메일</button>
+<button class="btn soft qa-provider" type="button" data-provider="outlook">Outlook</button>
+<button class="btn soft qa-provider" type="button" data-provider="default">기본 메일앱</button>
+<button class="btn soft" type="button" id="qaCopy">질문 내용 복사</button>
+</div>
+<div class="qa-note">※ Gmail·Outlook은 받는 사람/제목/본문을 자동으로 채웁니다. 네이버·카카오·다음은 보안상 자동 입력이 제한될 수 있어 질문 내용을 먼저 복사한 뒤 메일 작성창을 엽니다.</div>
 </form>
 </div>
 </div></section>
@@ -186,6 +194,7 @@ section{padding:54px 0}.sectionhead{display:flex;justify-content:space-between;g
 <script>
 const qaForm=document.getElementById('qaForm');
 const qaCopy=document.getElementById('qaCopy');
+const qaProviderButtons=document.querySelectorAll('.qa-provider');
 
 function buildQaMessage(){
   const name=document.getElementById('qaName').value.trim();
@@ -207,33 +216,69 @@ function buildQaMessage(){
   return {email, message, subject, body};
 }
 
-if(qaForm){
-  qaForm.addEventListener('submit',function(e){
-    e.preventDefault();
-    const q=buildQaMessage();
-    if(!q.email || !q.message){
-      alert('회신 받을 이메일과 질문 내용을 입력해 주세요.');
-      return;
-    }
-    const gmail='https://mail.google.com/mail/?view=cm&fs=1&to=whgns8364%40gmail.com&su='
-      +encodeURIComponent(q.subject)+'&body='+encodeURIComponent(q.body);
-    window.open(gmail,'_blank','noopener');
-  });
+function validateQa(q){
+  if(!q.email || !q.message){
+    alert('회신 받을 이메일과 질문 내용을 입력해 주세요.');
+    return false;
+  }
+  return true;
 }
+
+async function copyQa(q, silent=false){
+  try{
+    await navigator.clipboard.writeText(
+      '받는 사람: whgns8364@gmail.com\n제목: '+q.subject+'\n\n'+q.body
+    );
+    if(!silent) alert('받는 사람·제목·질문 내용이 복사되었습니다.');
+    return true;
+  }catch(err){
+    if(!silent) alert('자동 복사가 되지 않았습니다. 질문 내용을 직접 선택해 복사해 주세요.');
+    return false;
+  }
+}
+
+if(qaForm){
+  qaForm.addEventListener('submit',function(e){ e.preventDefault(); });
+}
+
+qaProviderButtons.forEach(function(btn){
+  btn.addEventListener('click',async function(){
+    const q=buildQaMessage();
+    if(!validateQa(q)) return;
+    const provider=this.dataset.provider;
+    const to='whgns8364@gmail.com';
+    let url='';
+
+    if(provider==='gmail'){
+      url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)
+        +'&su='+encodeURIComponent(q.subject)+'&body='+encodeURIComponent(q.body);
+    }else if(provider==='outlook'){
+      url='https://outlook.live.com/mail/0/deeplink/compose?to='+encodeURIComponent(to)
+        +'&subject='+encodeURIComponent(q.subject)+'&body='+encodeURIComponent(q.body);
+    }else if(provider==='naver'){
+      await copyQa(q,true);
+      url='https://mail.naver.com/v2/new';
+      alert('질문 내용이 복사되었습니다. 네이버 메일 작성창에서 붙여넣어 주세요.');
+    }else if(provider==='kakao'){
+      await copyQa(q,true);
+      url='https://mail.kakao.com/';
+      alert('질문 내용이 복사되었습니다. 카카오메일 작성창에서 붙여넣어 주세요.');
+    }else if(provider==='daum'){
+      await copyQa(q,true);
+      url='https://mail.daum.net/';
+      alert('질문 내용이 복사되었습니다. 다음메일 작성창에서 붙여넣어 주세요.');
+    }else{
+      url='mailto:'+to+'?subject='+encodeURIComponent(q.subject)+'&body='+encodeURIComponent(q.body);
+    }
+    window.open(url,'_blank','noopener');
+  });
+});
 
 if(qaCopy){
   qaCopy.addEventListener('click',async function(){
     const q=buildQaMessage();
-    if(!q.message){
-      alert('먼저 질문 내용을 입력해 주세요.');
-      return;
-    }
-    try{
-      await navigator.clipboard.writeText('제목: '+q.subject+'\n\n'+q.body);
-      alert('질문 내용이 복사되었습니다.');
-    }catch(err){
-      alert('자동 복사가 되지 않았습니다. 질문 내용을 직접 선택해 복사해 주세요.');
-    }
+    if(!validateQa(q)) return;
+    await copyQa(q,false);
   });
 }
 </script>
