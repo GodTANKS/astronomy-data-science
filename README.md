@@ -53,7 +53,7 @@ Google Colab용과 Jupyter Notebook용 두 가지 형식으로 제공합니다.
 | 실습 | 권장 실행 | 내려받을 수 있는 파일 |
 |---|---|---|
 | 은하 분류 AI | Streamlit Web / 로컬 Streamlit | Windows ZIP · macOS ZIP · Python 소스 |
-| 태양계 역학적 분류 | Google Colab | Colab용 ZIP · 분석 함수 `.py` · Jupyter Notebook용 자료 |
+| 태양계 역학적 분류 | Google Colab | Colab용 ZIP · 분석 함수 `.py` · Jupyter Notebook용 ZIP 추가 예정 |
 | 외계행성계 탐사 | Google Colab | Colab용 ZIP(Notebook + CSV) |
 | 구상성단 분포 | Google Colab | Colab용 ZIP(Notebook + CSV) |
 | 외부고리 은하 영상 분석 | Google Colab / Jupyter Notebook | Colab용 ZIP · Jupyter Notebook용 ZIP · FITS |
