@@ -40,14 +40,30 @@ Google Colab에서 실제 외계행성 카탈로그를 분석합니다.
 논문용 Jupyter Notebook의 원본 분석 흐름을 최대한 유지한 Colab판에서 유형별 데이터 처리, 그래프 분석, 목성 티세랑, 개별 천체 2D·3D 궤도와 분류 확인을 수행합니다.
 
 ### 딥러닝 기반 은하 분류
-Streamlit 웹 간편판으로 은하 이미지 수집·전처리·증강·CNN 학습·혼동행렬 해석을 브라우저에서 수행하도록 준비했습니다. 최초 1회 Streamlit Community Cloud 배포 후 홈페이지에서 바로 실행하도록 연결합니다.
+Streamlit 웹 버전에서 은하 이미지 수집·전처리·증강·CNN 학습·혼동행렬 해석까지 수행할 수 있습니다. 사용자별 데이터와 학습 산출물은 분리되어 있으며, 10명 이상의 단체수업에서는 GitHub Release의 Windows/macOS 배포본을 각 PC에서 실행하는 방식을 권장합니다.
 
 ### 외부고리 은하 영상 분석
-Google Colab 간편판에서 은하 번호를 선택하면 필요한 SDSS FITS를 자동으로 받고, i-band 영상에서 장축·단축 방향을 직접 마우스로 클릭하여 영상 처리·등광도선 분석을 수행합니다.
+연구용 원본은 Jupyter Notebook이며, 별도로 제공하는 **Google Colab 원본 반영판**은 분석 흐름을 축약하지 않고 로컬 경로·입력·이미지 클릭 방식을 Colab 환경에 맞게 변환했습니다.
 
 ### SGP4 모델과 AI 모델을 활용한 STSE 우주감시 웹 콘텐츠 개발
 현재 논문 심사 중인 연구입니다. 웹 애플리케이션은 Beta 공개를 목표로 하되 소스코드·활동지·세부 구현 자료와 논문 원문은 비공개로 유지하며, 홈페이지에는 연구 진행 사실과 공개 시점을 기록합니다.
 
+## 실행·다운로드 형식 한눈에 보기
+
+| 실습 | 권장 실행 | 내려받을 수 있는 파일 |
+|---|---|---|
+| 은하 분류 AI | Streamlit Web / 로컬 Streamlit | Windows ZIP · macOS ZIP · Python 소스 |
+| 태양계 역학적 분류 | Google Colab | 원본반영판 `.ipynb` · 분석 함수 `.py` |
+| 외계행성계 탐사 | Google Colab | Colab용 `.ipynb` · CSV |
+| 구상성단 분포 | Google Colab | Colab용 `.ipynb` · CSV |
+| 외부고리 은하 영상 분석 | Jupyter 원본 / Colab 원본반영판 | 원본 `.ipynb` · Colab `.ipynb` · `.py` · FITS |
+| SGP4 + AI 우주감시 | Streamlit Beta | 현재 소스 비공개 |
+
+실제 파일을 바로 받으려면 공식 홈페이지의 **코드·파일 다운로드** 섹션을 이용하세요.
+
+https://GodTANKS.github.io/astronomy-data-science/#downloads
+
+---
 ## Publications
 
 논문 PDF는 각 코드 저장소에 중복 보관하지 않고 **통합 논문 모음** 한 곳에서 관리합니다.
