@@ -95,9 +95,9 @@ if qa_submit:
             "------------------------------",
             qa_message.strip(),
         ])
-        mailto = "mailto:whgns8364@gmail.com?subject=" + quote(subject) + "&body=" + quote(body)
-        st.success("질문 내용이 준비되었습니다. 아래 버튼을 눌러 이메일로 보내 주세요.")
-        st.link_button("✉️ 작성한 질문 이메일로 보내기", mailto)
+        gmail = "https://mail.google.com/mail/?view=cm&fs=1&to=whgns8364%40gmail.com&su=" + quote(subject) + "&body=" + quote(body)
+        st.success("질문 내용이 준비되었습니다. 아래 버튼을 누르면 Gmail 작성창이 열립니다.")
+        st.link_button("✉️ Gmail로 질문 보내기", gmail)
 
 st.markdown(
     '홈페이지의 <a href="https://GodTANKS.github.io/astronomy-data-science/#contact" target="_blank">문의·Q&A 페이지</a>에서도 질문을 작성할 수 있습니다.',
